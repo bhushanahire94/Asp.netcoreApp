@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using DemoApp.Context;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -10,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 
 namespace DemoApp
 {
@@ -26,6 +28,10 @@ namespace DemoApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddDbContextPool<EmployeeContext>(options => options.UseSqlServer(Configuration.GetConnectionString("EmployeeDbConnection")));
+            services.AddSpaStaticFiles(configuration => {
+                configuration.RootPath = "Demo/dist";
+            });
         }
         //Comment
 
@@ -36,16 +42,26 @@ namespace DemoApp
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseCors(builder => builder
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .SetIsOriginAllowed((host) => true)
+              .AllowCredentials()
+              );
             app.UseHttpsRedirection();
-
             app.UseRouting();
+            app.UseAuthorization();
 
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+            });
+            app.UseSpaStaticFiles();
+            app.UseSpa(spa =>
+            {
+                spa.Options.SourcePath = "Demo";
             });
         }
     }
